@@ -1,0 +1,29 @@
+{
+    "title": "<title>",
+    "description": "<description>",
+    "state": "OPEN",
+    "open": true,
+    "closed": false,
+    "fromRef": {
+        "id": "refs/heads/<source>",
+        "repository": {
+            "slug": "<repository>",
+            "name": null,
+            "project": {
+                "key": "<project>"
+            }
+        }
+    },
+    "toRef": {
+        "id": "refs/heads/<destination>",
+        "repository": {
+            "slug": "<repository>",
+            "name": null,
+            "project": {
+                "key": "<project>"
+            }
+        }
+    },
+    "locked": false,
+    "reviewers": <reviewers>
+}
