@@ -137,6 +137,40 @@
 
   (json-encode reviewers))
 
+(defun git-commits ()
+  (git-exec "log --branches --not --remotes --oneline --format=%B"))
+
+(defun stash-pr-create-request ()
+  (format "{
+    \"title\": \"<title>\",
+    \"description\": \"<description>\",
+    \"state\": \"OPEN\",
+    \"open\": true,
+    \"closed\": false,
+    \"fromRef\": {
+        \"id\": \"refs/heads/<source>\",
+        \"repository\": {
+            \"slug\": \"<repository>\",
+            \"name\": null,
+            \"project\": {
+                \"key\": \"<project>\"
+            }
+        }
+    },
+    \"toRef\": {
+        \"id\": \"refs/heads/<destination>\",
+        \"repository\": {
+            \"slug\": \"<repository>\",
+            \"name\": null,
+            \"project\": {
+                \"key\": \"<project>\"
+            }
+        }
+    },
+    \"locked\": false,
+    \"reviewers\": <reviewers>
+}"))
+  
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Public functions:
@@ -150,28 +184,39 @@
 (defun stash-pull-request (destination-branch)
   "Creates a pull request and displays the link for any further use afterwards."
   (interactive "sDestination: ")
-;  (unless (and stash-username stash-password stash-url)
-;    (user-error "Username, password and URL for Stash must be set."))
+  (unless (and stash-username stash-password stash-url)
+    (user-error "Username, password and URL for Stash must be set."))
 
   (let (
 	(dir (pwd))
 	(destpath (git-exec "config --get remote.origin.url"))
-	(request (read-file "pr-post.json"))
+	(request (stash-pr-create-request))
 	(current-branch (git-current-branch))
+	(auth-header (format "Basic %s" (base64-encode-string (format "%s:%s" stash-username stash-password) t)))
 	)
     (require 'request)
     (setq gitparts (parse-git-url destpath))
+    (setq request (replace-regexp-in-string "<title>" current-branch request))
     (setq request (replace-regexp-in-string "<source>" current-branch request))
     (setq request (replace-regexp-in-string "<destination>" destination-branch request))
-    (setq request (replace-regexp-in-string "<reviewers>" (build-reviewers-list stash-reviewers)))
+    (setq request (replace-regexp-in-string "<project>" (nth 0 gitparts) request))
+    (setq request (replace-regexp-in-string "<repository>" (nth 1 gitparts) request))
+    (setq request (replace-regexp-in-string "<reviewers>" (build-reviewers-list stash-reviewers) request))
+    (setq request (replace-regexp-in-string "<description>" (git-commits) request))
+    
     (message "%s" request)
-    ;(request
-    ; (create-stash-url (nth 0 gitparts) (nth 1 gitparts))
-    ; :type "POST"
-    ; :data request
-    ; :parser 'json-read
-    ; :success (function* lambda (&key data &allow-other-keys)
-;			 ))
+;    (request
+;     (create-stash-url (nth 0 gitparts) (nth 1 gitparts))
+;     :type "POST"
+;     :data request
+;     :parser 'json-read
+;     :headers '(("Content-Type" . "application/json")
+;		("Content-Length" . (length request))
+;		("Authorization" . auth-header))
+;     :success (function* (lambda (&key data &allow-other-keys)
+;			   (let ((url (assoc-default 'url (elt (assoc-default 'link data) 0))))
+;			     (message "PR link: %s" url))
+;			 )))
     ))
 
 (provide 'stash-mode)
