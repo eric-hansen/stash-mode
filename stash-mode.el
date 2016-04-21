@@ -76,7 +76,7 @@
 ;;; Autoloads:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("*\\.*\\'" . composer-mode))
+(add-to-list 'auto-mode-alist '("*\\.*\\'" . stash-mode))
 
 ;;;###autoload
 (define-minor-mode stash-mode
