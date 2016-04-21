@@ -119,6 +119,9 @@
 (defun stash-mode/create-stash-url (project repo)
   (format "%s/rest/api/1.0/projects/%s/repos/%s/pull-requests" stash-url (upcase project) repo))
 
+(defun stash-mode/create-stash-pr-url (project repo pr-id)
+  (format "%s/projects/%s/repos/%s/pull-requests/%s" stash-url (upcase project) repo pr-id))
+
 (defun stash-mode/build-reviewers-list ()
   (require 'json)
   (setq reviewers (make-vector (length stash-reviewers) nil))
@@ -193,19 +196,20 @@
     (setq request (replace-regexp-in-string "<repository>" (nth 1 gitparts) request))
     (setq request (replace-regexp-in-string "<reviewers>" (build-reviewers-list stash-reviewers) request))
     (setq request (replace-regexp-in-string "<description>" (git-commits) request))
-    
+
     (request
      (stash-mode/create-stash-url (nth 0 gitparts) (nth 1 gitparts))
      :type "POST"
-     :sync t
      :data request
      :parser 'json-read
+     :sync t
      :headers `(("Content-Type" . "application/json")
 		("Content-Length" . ,(length request))
 		("Authorization" . ,auth-header))
      :success (function* (lambda (&key data &allow-other-keys)
-			   (message "PR link: %s" (assoc-default 'href (aref (assoc-default 'self (assoc-default 'links json-obj)) 0)))
-			   ))
+			   (message "")
+			   (sleep-for 2)
+			   (message "PR link: %s" (stash-mode/create-stash-pr-url (nth 0 gitparts) (nth 1 gitparts) (assoc-default 'id data)))))
      :error (function* (lambda (&key error-thrown &allow-other-keys&rest _)
 			 (message "Unable to create PR.  Make sure this branch doesn't already have a PR and try again."))))))
 
