@@ -1,5 +1,5 @@
 ;;; stash-mode.el -- Minor mode to interact with STASH (more slimmed down version of org-stash??)
-;; 
+;;
 ;; Filename: stash-mode.el
 ;; Description: Minor mode for STASH that allows some very basic functionality
 ;; Author: Eric Hansen
@@ -7,10 +7,10 @@
 ;; Copyright (C) 2016 Eric Hansen, all rights reserved.
 ;; Created: April 18, 2016
 ;; Version: 0.0.1
-;; URL: 
+;; URL:
 ;; Keywords: Stash, minor mode
 ;; Compatibility: 23.2+
-;; 
+;;
 ;; Features that might be required by this library:
 ;;
 ;;   json
@@ -18,51 +18,56 @@
 ;;   request
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
-;;; Commentary: 
+;;
+;;; Commentary:
 ;;
 ;; Allows various functionality such as creating pull requests (which is
 ;; arguably more of a Stash thing but hey).
-;; 
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
+;;
 ;;; Change log:
 ;;
 ;; 0.0.1 - initial alpha release
-;; 
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
+;;
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
 ;; published by the Free Software Foundation; either version 3, or
 ;; (at your option) any later version.
-;; 
+;;
 ;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
 ;; General Public License for more details.
-;; 
+;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with this program; see the file COPYING.  If not, write to
 ;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
 ;; Floor, Boston, MA 02110-1301, USA.
-;; 
+;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; 
+;;
 ;;; Variables:
-(defvar stash-mode-hook nil)
+(defvar stash-mode-hook nil
+  "A hook for stash-mode that doesn't do anything at the moment.")
 
 ; String of the username used to log into Stash
-(defvar stash-username nil)
+(defvar stash-username nil
+  "String of the username used to log into Stash.")
 
 ; Password string used to log in
-(defvar stash-password nil)
+(defvar stash-password nil
+  "Password string used to log in.")
 
 ; List of strings you want to add for reviewers
-(defvar stash-reviewers '())
+(defvar stash-reviewers '()
+  "List of strings you want to add for reviewers.")
 
 ; The URL of Stash so we can API this thing
-(defvar stash-url nil)
+(defvar stash-url nil
+  "The URL of Stash so we can API this thing.")
 
 ; Keymap used for stash-mode
 (defvar stash-mode-map
@@ -169,7 +174,7 @@
     \"locked\": false,
     \"reviewers\": <reviewers>
 }"))
-  
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;;; Public functions:
