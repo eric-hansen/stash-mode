@@ -120,12 +120,25 @@
 (defun stash-mode/git-current-branch ()
   (stash-mode/git-exec "branch | grep '*' | awk '{print $2}'"))
 
+(defun stash-mode/clean-url (stash-url)
+  "Remove trailing slashes from the STASH-URL."
+  (replace-regexp-in-string "/+$" "" stash-url))
+
 ;; Create a URL that is pleasant to use
 (defun stash-mode/create-stash-url (project repo)
-  (format "%s/rest/api/1.0/projects/%s/repos/%s/pull-requests" stash-url (upcase project) repo))
+  "Create an URL that is pleasant to use given the PROJECT and the REPO."
+  (format "%s/rest/api/1.0/projects/%s/repos/%s/pull-requests"
+          (stash-mode/clean-url stash-url)
+          (upcase project)
+          repo))
 
 (defun stash-mode/create-stash-pr-url (project repo pr-id)
-  (format "%s/projects/%s/repos/%s/pull-requests/%s" stash-url (upcase project) repo pr-id))
+  "Build the pull request URL for the PROJECT and REPO by using a PR-ID."
+  (format "%s/projects/%s/repos/%s/pull-requests/%s"
+          (stash-mode/clean-url stash-url)
+          (upcase project)
+          repo
+          pr-id))
 
 (defun stash-mode/build-reviewers-list ()
   (require 'json)
@@ -180,10 +193,10 @@
 ;;; Public functions:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 (defun stash-mode/stash-pull-request (destination-branch)
-  "Creates a pull request and displays the link for any further use afterwards."
+  "Create a pull request for DESTINATION-BRANCH and displays the link for any further use afterwards."
   (interactive "sDestination: ")
   (unless (and stash-username stash-password stash-url)
-    (user-error "Username, password and URL for Stash must be set."))
+    (user-error "Username, password and URL for Stash must be set"))
 
   (let (
 	(dir (pwd))
