@@ -121,7 +121,7 @@
   (stash-mode/git-exec "branch | grep '*' | awk '{print $2}'"))
 
 (defun stash-mode/clean-url (stash-url)
-  "Remove trailing whitespace from the STASH-URL."
+  "Remove trailing slashes from the STASH-URL."
   (replace-regexp-in-string "/+$" "" stash-url))
 
 ;; Create a URL that is pleasant to use
