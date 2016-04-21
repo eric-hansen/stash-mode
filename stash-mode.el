@@ -108,7 +108,7 @@
 ;; Parse a Git URL to get the project and repository
 (defun stash-mode/parse-git-url (url)
   ;; In case SSL is used here lets be a little friendly here.  This assumes match 1 is the project and match 2 is the repository
-  (if (or (match-regex "http.://.*/\\([^/].*\\)/\\([^\.].*\\).git" url) (match-regex ".*:[^/].*/\\([^/].*\\)/\\(.*\\).git" url))
+  (if (or (stash-mode/match-regex "http.://.*/\\([^/].*\\)/\\([^\.].*\\).git" url) (stash-mode/match-regex ".*:[^/].*/\\([^/].*\\)/\\(.*\\).git" url))
       (list (match-string 1 url) (match-string 2 url))))
 
 ;; Get the current branch we are on in Git
