@@ -68,7 +68,6 @@
 (defvar stash-mode-map
   (let ((map (make-keymap)))
     (define-key map (kbd "C-s p") 'stash-pull-request)
-    (define-key map (kbd "C-s i") 'stash-init)
     map)
   "Keymap for Stash mode")
 
