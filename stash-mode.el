@@ -97,39 +97,36 @@
 ;;
 ;;; Private functions:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun exec (cmd)
+(defun stash-mode/exec (cmd)
   (string-trim-right (shell-command-to-string cmd)))
 
-(defun git-exec (cmd)
-  (exec (format "git %s" cmd)))
+(defun stash-mode/git-exec (cmd)
+  (stash-mode/exec (format "git %s" cmd)))
 
-(defun match-regex (regex text)
+(defun stash-mode/match-regex (regex text)
   (string-match regex text))
 
 ;; Parse a Git URL to get the project and repository
-(defun parse-git-url (url)
+(defun stash-mode/parse-git-url (url)
   ;; In case SSL is used here lets be a little friendly here.  This assumes match 1 is the project and match 2 is the repository
-  (if (or (match-regex "http.://.*/\\([^/].*\\)/\\([^\.].*\\).git" url) (match-regex ".*@.*:\\([^/].*\\)/\\([^\.].*\\).git" url))
+  (if (or (match-regex "http.://.*/\\([^/].*\\)/\\([^\.].*\\).git" url) (match-regex ".*:[^/].*/\\([^/].*\\)/\\(.*\\).git" url))
       (list (match-string 1 url) (match-string 2 url))))
 
 ;; Get the current branch we are on in Git
-(defun git-current-branch ()
-  (git-exec "branch | grep '*' | awk '{print $2}'"))
+(defun stash-mode/git-current-branch ()
+  (stash-mode/git-exec "branch | grep '*' | awk '{print $2}'"))
 
 ;; Create a URL that is pleasant to use
-(defun create-stsah-url (project repo)
-  (format "%s/rest/api/1.0/projects/%s/repos/%s/pull-requests" stash-url project repo))
+(defun stash-mode/create-stash-url (project repo)
+  (format "%s/rest/api/1.0/projects/%s/repos/%s/pull-requests" stash-url (upcase project) repo))
 
-(defun read-file (filename)
-  (with-temp-buffer (insert-file-contents filename) (buffer-string)))
-
-(defun build-reviewers-list (reviewers-list)
+(defun stash-mode/build-reviewers-list ()
   (require 'json)
-  (setq namehash (make-hash-table :test 'equal))
-  (setq reviewers (make-vector (length reviewers-list) nil))
+  (setq reviewers (make-vector (length stash-reviewers) nil))
   (setq index 0)
 
-  (dolist (reviewer reviewers-list)
+  (dolist (reviewer stash-reviewers)
+    (setq namehash (make-hash-table :test 'equal))
     (puthash "user" (make-hash-table :test 'equal) namehash)
     (puthash "name" reviewer (gethash "user" namehash))
     (aset reviewers index namehash)
@@ -137,10 +134,10 @@
 
   (json-encode reviewers))
 
-(defun git-commits ()
-  (git-exec "log --branches --not --remotes --oneline --format=%B"))
+(defun stash-mode/git-commits ()
+  (stash-mode/git-exec "log --branches --not --remotes --oneline --format=%B"))
 
-(defun stash-pr-create-request ()
+(defun stash-mode/stash-pr-create-request ()
   (format "{
     \"title\": \"<title>\",
     \"description\": \"<description>\",
@@ -175,13 +172,7 @@
 ;;
 ;;; Public functions:
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-(defun stash-init ()
-  "Calls git init on the current directory."
-  (interactive)
-  (unless (file-exists-p ".git")
-    (git-exec "init")))
-
-(defun stash-pull-request (destination-branch)
+(defun stash-mode/stash-pull-request (destination-branch)
   "Creates a pull request and displays the link for any further use afterwards."
   (interactive "sDestination: ")
   (unless (and stash-username stash-password stash-url)
@@ -189,34 +180,34 @@
 
   (let (
 	(dir (pwd))
-	(destpath (git-exec "config --get remote.origin.url"))
-	(request (stash-pr-create-request))
-	(current-branch (git-current-branch))
+	(destpath (stash-mode/git-exec "config --get remote.origin.url"))
+	(request (stash-mode/stash-pr-create-request))
+	(current-branch (stash-mode/git-current-branch))
 	(auth-header (format "Basic %s" (base64-encode-string (format "%s:%s" stash-username stash-password) t)))
 	)
     (require 'request)
-    (setq gitparts (parse-git-url destpath))
+    (setq gitparts (stash-mode/parse-git-url destpath))
     (setq request (replace-regexp-in-string "<title>" current-branch request))
     (setq request (replace-regexp-in-string "<source>" current-branch request))
     (setq request (replace-regexp-in-string "<destination>" destination-branch request))
-    (setq request (replace-regexp-in-string "<project>" (nth 0 gitparts) request))
+    (setq request (replace-regexp-in-string "<project>" (upcase (nth 0 gitparts)) request))
     (setq request (replace-regexp-in-string "<repository>" (nth 1 gitparts) request))
     (setq request (replace-regexp-in-string "<reviewers>" (build-reviewers-list stash-reviewers) request))
     (setq request (replace-regexp-in-string "<description>" (git-commits) request))
     
-    (message "%s" request)
-;    (request
-;     (create-stash-url (nth 0 gitparts) (nth 1 gitparts))
-;     :type "POST"
-;     :data request
-;     :parser 'json-read
-;     :headers '(("Content-Type" . "application/json")
-;		("Content-Length" . (length request))
-;		("Authorization" . auth-header))
-;     :success (function* (lambda (&key data &allow-other-keys)
-;			   (let ((url (assoc-default 'url (elt (assoc-default 'link data) 0))))
-;			     (message "PR link: %s" url))
-;			 )))
-    ))
+    (request
+     (stash-mode/create-stash-url (nth 0 gitparts) (nth 1 gitparts))
+     :type "POST"
+     :sync t
+     :data request
+     :parser 'json-read
+     :headers `(("Content-Type" . "application/json")
+		("Content-Length" . ,(length request))
+		("Authorization" . ,auth-header))
+     :success (function* (lambda (&key data &allow-other-keys)
+			   (message "PR link: %s" (assoc-default 'href (aref (assoc-default 'self (assoc-default 'links json-obj)) 0)))
+			   ))
+     :error (function* (lambda (&key error-thrown &allow-other-keys&rest _)
+			 (message "Unable to create PR.  Make sure this branch doesn't already have a PR and try again."))))))
 
 (provide 'stash-mode)
