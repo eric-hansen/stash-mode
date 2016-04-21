@@ -10,7 +10,7 @@ Until I can put this on MELPA just clone the repo or copy/paste it into a file a
 
 * `stash-username` - The username you use for Stash (OAuth is not supported yet)
 * `stash-password` - The password for the username
-* `stash-url` - The base URL for Stash (i.e.: http://stash.example.com or http://www.example.com/stash), no trailing slash.
+* `stash-url` - The base URL for Stash (i.e.: http://stash.example.com or http://www.example.com/stash).
 * `stash-reviewers` - Username(s) of people who are to review this code, if any
 
 ## How To Use
